@@ -3837,7 +3837,8 @@
                 document.getElementById("byte-map").textContent,
             );
             
-			
+			const PERSONALITIES = ["Normal","Preppy","Grumpy","Brainy","Swaggy","Cutey","Baby","Haughty","Leprechaun","Algernon de Horsey","Sweetie","Car","Unknown(Normal?)","Rude"];
+					
 			const GENOME_MAP = [
 			  "03041011072026396254",
 			  "0e0f122d5b8586c1c9d4d5d3d6",
@@ -4059,6 +4060,27 @@
 				
 				const age =
 					off + 7 < original.length ? getByte(off + 7) : null;
+				const personality =
+					off + 9 < original.length ? getByte(off + 7) : null;	
+					/*
+					https://horseygame.miraheze.org/wiki/Personality
+					0 = Normal
+					1 = Preppy
+					2 = Grump
+					3 = Brainy
+					4 = Swaggy
+					5 = Cutey
+					6 = Baby
+					7 = Haughty
+					8 = Leprechaun 
+					9 = Algernon de Horsey
+					10 = Sweetie
+					11 = Car
+					12 = Unknown
+					13 = Rude
+					14 onwards will crash
+					
+					*/
 				const ownerFlag =
 					off + 10 < original.length ? getByte(off + 10) : null;
 
@@ -4071,40 +4093,47 @@
             }
 			
             function findDnaRuns() {
-				let dna_count = 0;
+				
 
 				const codeSet = new Set([9, 10, 11, 12, 17, 18, 19, 20, 25, 26, 27, 28, 33, 34, 35, 36]);				
-                const runs = [];
+                
                 let i = tableEnd;
-				console.log(i + " / " + original.length);
+				//console.log(i + " / " + original.length);
                 while (i < original.length) {
                     if (!codeSet.has(original[i])) {
                         i++;
                         continue;
                     }
                     let j = i;
-					if(i==281800||i==281448) console.log("Yrdy");
+					
                     while (j < original.length && codeSet.has(original[j])) j++;
                     const len = j - i;
                     if (len >= 240) {
-						dna_count=dna_count+1;
-						const b0=original[j+8];					
-						const b1=original[j+9];
-						const b2=original[j+10];
-						const b3=original[j+11];
 
-						const tempindex=((b3*256+b2)*256+b1)*256+b0;						
-						if(tempindex>=11&&tempindex<records.length){
-							
-							records[tempindex].detail_off=j+8;
-							
-							const near =tempindex;
-							
-							runs.push({ start: i, end: j, len, near });
+						//for(let k=0;k<(len-239);k++){
+						for(let k=0;k<1;k++){	 //temporary fixed at 1. need to rethink logic. might not need this check.
+							const b0=original[j+8+k];					
+							const b1=original[j+9+k];
+							const b2=original[j+10+k];
+							const b3=original[j+11+k];
+
+							const tempindex=((b3*256+b2)*256+b1)*256+b0;						
+							if(tempindex>10&&tempindex<records.length){
+								/*
+								if(len>240){
+									console.log("length: "+len+", start: "+i+", end: "+j+", k: "+k+ ", idx: "+tempindex);
+								}
+								*/
+								if(!records[tempindex].detail_off){
+									records[tempindex].detail_off=j+8;
+								}
+															
+								break;
+							}
 						}
                     }
                     i = j;
-                }				
+                }
                 
             }
 
@@ -4418,6 +4447,33 @@
                         ),
                     );
                 }
+				const personalityVal = (primaryDetail && primaryDetail.off + 9 < original.length) ? getByte(primaryDetail.off + 9) : null;				
+				if (personalityVal !== null) {
+					const personalitySelect = document.createElement('select');
+					personalitySelect.style.width = '160px';
+					
+					// Populate options 0..13 (personalities that won't crash)
+					for (let i = 0; i < PERSONALITIES.length; i++) {
+						const opt = document.createElement('option');
+						opt.value = i;
+						opt.textContent = PERSONALITIES[i];
+						personalitySelect.appendChild(opt);
+					}
+					
+					// Set current value, but clamp to 0..13; if the saved byte is out of range, you might want to handle that
+					const clampedVal = Math.min(Math.max(personalityVal, 0), 13);
+					personalitySelect.value = clampedVal;
+					
+					personalitySelect.addEventListener('change', () => {
+						const newVal = parseInt(personalitySelect.value);
+						setByte(primaryDetail.off + 9, newVal);
+						renderSelected();
+						renderRecords();
+					});
+					
+					props.appendChild(propRow('Personality', personalitySelect, null));
+				}				
+				
                 if (primaryDetail && primaryDetail.off + 11 < original.length) {
                     props.appendChild(
                         propRow(
@@ -4570,7 +4626,7 @@
 							const p1 = nextGenome[i][0][j];
 							const p2 = nextGenome[i][1][j];
 							const pair = p1+""+p2;
-							console.log(`Helix ${i}, Pair ${j}: ${rawIndex} ${entry.name} ${pair}`);
+							//console.log(`Helix ${i}, Pair ${j}: ${rawIndex} ${entry.name} ${pair}`);
 							
 							const nextByte = pairToByte(rawIndex, pair);
 							if (nextByte === null) {
