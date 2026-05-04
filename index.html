@@ -4081,6 +4081,8 @@
 					14 onwards will crash
 					
 					*/
+				//off + 14 = tiredness? i think 10 (A) or above is tired. Need to Test
+				//off + 6 could be horse status. 0 = ok 1= hot sauce,2=drunk ,3 =flu, 4=dead drunk?, 5=also drunk? 6=dead
 				const ownerFlag =
 					off + 10 < original.length ? getByte(off + 10) : null;
 
@@ -4106,33 +4108,31 @@
                     }
                     let j = i;
 					
-                    while (j < original.length && codeSet.has(original[j])) j++;
+                    while (j < original.length && codeSet.has(original[j])&& (j-i+1<=240)) j++;
                     const len = j - i;
                     if (len >= 240) {
 
-						//for(let k=0;k<(len-239);k++){
-						for(let k=0;k<1;k++){	 //temporary fixed at 1. need to rethink logic. might not need this check.
-							const b0=original[j+8+k];					
-							const b1=original[j+9+k];
-							const b2=original[j+10+k];
-							const b3=original[j+11+k];
+						
 
-							const tempindex=((b3*256+b2)*256+b1)*256+b0;						
-							if(tempindex>10&&tempindex<records.length){
-								/*
-								if(len>240){
-									console.log("length: "+len+", start: "+i+", end: "+j+", k: "+k+ ", idx: "+tempindex);
-								}
-								*/
-								if(!records[tempindex].detail_off){
-									records[tempindex].detail_off=j+8;
-								}
-															
-								break;
-							}
+						const b0=original[j+8];					
+						const b1=original[j+9];
+						const b2=original[j+10];
+						const b3=original[j+11];
+
+						const tempindex=((b3*256+b2)*256+b1)*256+b0;						
+						if(tempindex>10&&tempindex<records.length){
+							
+							records[tempindex].detail_off=j+8;
+							
+							i = j+54;
+						}else{
+							i = j;
 						}
-                    }
-                    i = j;
+						
+                    }else{
+						i = j;
+					}
+                    
                 }
                 
             }
