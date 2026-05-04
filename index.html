@@ -4104,7 +4104,7 @@
 				const codeSet = new Set([9, 10, 11, 12, 17, 18, 19, 20, 25, 26, 27, 28, 33, 34, 35, 36]);				
                 
                 let i = tableEnd;
-				//console.log(i + " / " + original.length);
+				
                 while (i < original.length) {
                     if (!codeSet.has(original[i])) {
                         i++;
@@ -4127,9 +4127,7 @@
 							if(tempindex>=0&&tempindex<records.length){
 								
 
-								if(tempindex<=11){
-									console.log("length: "+len+", start: "+i+", end: "+j+", k: "+k+ ", idx: "+tempindex);
-								}
+								
 								
 								const off=j+8;
 								const status =
@@ -4645,7 +4643,7 @@
 							const p1 = nextGenome[i][0][j];
 							const p2 = nextGenome[i][1][j];
 							const pair = p1+""+p2;
-							//console.log(`Helix ${i}, Pair ${j}: ${rawIndex} ${entry.name} ${pair}`);
+							
 							
 							const nextByte = pairToByte(rawIndex, pair);
 							if (nextByte === null) {
