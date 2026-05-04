@@ -4050,46 +4050,50 @@
             }
 
 			
-            function findHorseDetailBlocks(idx) {
+             function findHorseDetailBlocks(idx) {
                 if (!original) return [];
-				if (idx<11) return [];
-				const off=records[idx].detail_off;
-				if(!off) return [];
-                const hits = allOccurrencesU32(idx >>> 0, tableEnd);
 				const detailBlocks = [];
-				
-				const age =
-					off + 7 < original.length ? getByte(off + 7) : null;
-				const personality =
-					off + 9 < original.length ? getByte(off + 7) : null;	
-					/*
-					https://horseygame.miraheze.org/wiki/Personality
-					0 = Normal
-					1 = Preppy
-					2 = Grump
-					3 = Brainy
-					4 = Swaggy
-					5 = Cutey
-					6 = Baby
-					7 = Haughty
-					8 = Leprechaun 
-					9 = Algernon de Horsey
-					10 = Sweetie
-					11 = Car
-					12 = Unknown
-					13 = Rude
-					14 onwards will crash
+				//if (idx<11) return [];
+				for (let i in records[idx].detail_off){
+					const off = records[idx].detail_off[i];
+					if(!off) return [];
+					//const hits = allOccurrencesU32(idx >>> 0, tableEnd);
 					
-					*/
-				//off + 14 = tiredness? i think 10 (A) or above is tired. Need to Test
-				//off + 6 could be horse status. 0 = ok 1= hot sauce,2=drunk ,3 =flu, 4=dead drunk?, 5=also drunk? 6=dead
-				const ownerFlag =
-					off + 10 < original.length ? getByte(off + 10) : null;
+					const status =
+						off + 6 < original.length ? getByte(off + 6) : null;
+					const age =
+						off + 7 < original.length ? getByte(off + 7) : null;
+					const personality =
+						off + 9 < original.length ? getByte(off + 9) : null;	
+						/*
+						https://horseygame.miraheze.org/wiki/Personality
+						0 = Normal
+						1 = Preppy
+						2 = Grump
+						3 = Brainy
+						4 = Swaggy
+						5 = Cutey
+						6 = Baby
+						7 = Haughty
+						8 = Leprechaun 
+						9 = Algernon de Horsey
+						10 = Sweetie
+						11 = Car
+						12 = Unknown
+						13 = Rude
+						14 onwards will crash
+						
+						*/
+					//off + 14 = tiredness? i think 10 (A) or above is tired. Need to Test
+					//off + 6 could be horse status. 0 = ok 1= hot sauce,2=drunk ,3 =flu, 4=dead drunk?, 5=also drunk? 6=dead
+					const ownerFlag =
+						off + 10 < original.length ? getByte(off + 10) : null;
 
-				const nearbyDna = [{ start: off-248, end: off-8, len:240, near:idx }];
-				
-				detailBlocks.push({ off, age, ownerFlag, nearbyDna });
-				                   
+					const nearbyDna = [{ start: off-248, end: off-8, len:240, near:idx }];
+					//if((age>0||idx>10)&&age>=0&&age<=11&&personality>=0&&personality<PERSONALITIES.length&&status>=0&&status<7){
+					detailBlocks.push({ off, age, ownerFlag, nearbyDna });
+					//}
+				}
               			
 				return detailBlocks;
             }
@@ -4112,27 +4116,42 @@
                     const len = j - i;
                     if (len >= 240) {
 
-						
-
-						const b0=original[j+8];					
-						const b1=original[j+9];
-						const b2=original[j+10];
-						const b3=original[j+11];
-
-						const tempindex=((b3*256+b2)*256+b1)*256+b0;						
-						if(tempindex>10&&tempindex<records.length){
+						//for(let k=0;k<(len-239);k++){
+						for(let k=0;k<1;k++){	 //temporary fixed at 1. need to rethink logic. might not need this check.
+							const b0=original[j+8+k];					
+							const b1=original[j+9+k];
+							const b2=original[j+10+k];
+							const b3=original[j+11+k];
 							
-							records[tempindex].detail_off=j+8;
-							
-							i = j+54;
-						}else{
-							i = j;
+							const tempindex=((b3*256+b2)*256+b1)*256+b0;						
+							if(tempindex>=0&&tempindex<records.length){
+								
+
+								if(tempindex<=11){
+									console.log("length: "+len+", start: "+i+", end: "+j+", k: "+k+ ", idx: "+tempindex);
+								}
+								
+								const off=j+8;
+								const status =
+									off + 6 < original.length ? getByte(off + 6) : null;
+								const age =
+									off + 7 < original.length ? getByte(off + 7) : null;
+								const personality =
+									off + 9 < original.length ? getByte(off + 9) : null;	
+								if((age>0||tempindex>10)&&age>=0&&age<=11&&personality>=0&&personality<PERSONALITIES.length&&status>=0&&status<7){
+									if(!records[tempindex].detail_off){
+										records[tempindex].detail_off = [];
+									}
+								
+									records[tempindex].detail_off.push(j+8);
+								}									
+
+							}
 						}
 						
-                    }else{
-						i = j;
-					}
-                    
+                    }
+                    i = j;
+					
                 }
                 
             }
@@ -4230,7 +4249,7 @@
                 const q = $("search").value.trim().toLowerCase();
                 const filter = $("filter").value;
                 let rows = records;
-                if (filter === "horses") rows = rows.filter(isLikelyHorse);
+                //if (filter === "horses") rows = rows.filter(isLikelyHorse);
 				if (filter === "hasgenome") rows = rows.filter(hasGenome);
                 if (filter === "named")
                     rows = rows.filter((r) => r.name.length);
